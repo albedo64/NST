@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Loader</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: normal;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            padding: 40px 40px;
+            /* background-color: #f0f0f0; */
+        }
+
+        .container {
+            display: flex;
+            justify-content: space-between;
+            width: 80%;
+            max-width: 800px;
+            margin-bottom: 20px;
+        }
+
+        .image-container, .content-container {
+            background-color: rgba(255, 255, 255, 0.5);
+            /* background-color: white; */
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            flex-basis: 45%;
+        }
+        
+
+        .image-container h1 {
+            margin-top: 0;
+        }
+
+        .image-container input[type="file"] {
+            display: none;
+        }
+
+        .image-container label {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .image-container label:hover {
+            background-color: #45a049;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .content-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        button {
+            background-color: #45a049;
+            display: inline-block;
+            color: white;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="image-container">
+        <h1>Chargez l'image de contenu</h1>
+        <input type="file" id="image-input-1" accept="image/*">
+        <label for="image-input-1">choisir</label>
+        <img src="#" alt="Image Preview" class="image-preview">
+    </div>
+    <div class="content-container">
+        <h3>Implémentation</h3>
+        <label for="run">Entrez le nombre d'itération</label>
+        <input type="number" placeholder="15" size="25px">
+        <img id="final-image-container" style="display: none;">
+        <button style="margin-top: 15px;" type="submit">lancer</button>
+    </div>
+    <div class="image-container">
+        <h1>Chargez l'image de style</h1>
+        <input type="file" id="image-input-2" accept="image/*">
+        <label for="image-input-2">choisir</label>
+        <img src="#" alt="Image Preview" class="image-preview">
+    </div>
+</div>
+<div class="container_2">
+    <div id="final-image-container" style="display: flex;">
+
+    </div>
+</div>
+
+<script>
+    // Code JavaScript pour charger les images
+    document.getElementById('image-input-1').addEventListener('change', function() {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.querySelector('#image-input-1 + label + img').src = e.target.result;
+            document.querySelector('#image-input-1 + label + img').style.display = 'block';
+        };
+        reader.readAsDataURL(this.files[0]);
+    });
+
+    document.getElementById('image-input-2').addEventListener('change', function() {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.querySelector('#image-input-2 + label + img').src = e.target.result;
+            document.querySelector('#image-input-2 + label + img').style.display = 'block';
+        };
+        reader.readAsDataURL(this.files[0]);
+    });
+
+    // Code JavaScript pour communiquer avec l'API
+    document.querySelector('button[type="submit"]').addEventListener('click', function() {
+        var image1 = document.querySelector('#image-input-1 + label + img').src;
+        console.log(image1)
+        var image2 = document.querySelector('#image-input-2 + label + img').src;
+        //console.log(image2)
+        var iteration = document.querySelector('input[type="number"]').value;
+        //console.log(iteration)
+
+        // Envoie des données à l'API
+        // Remplace 'URL_API' par l'URL réelle de ton API
+        if (image1 && image2 && iteration) {
+            var formData = new FormData();   
+            formData.append('image1', image1);
+            formData.append('image2', image2);
+            formData.append('iteration', iteration);
+
+            fetch('/api', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: formData
+        })
+        .then(function(response) {
+            if (response.ok) {
+                return response.blob();
+            } else {
+                throw new Error('Erreur lors de la récupération de l\'image');
+            }
+        })
+        .then(function(data) {
+            var imageUrl = URL.createObjectURL(data);
+            var container = document.getElementById('final-image-container');
+            
+            // Suppression de l'élément img précédent, s'il existe
+            if (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
+            
+            // Création d'un nouvel élément img et attribution de l'image renvoyée par l'API
+            var imageElement = new Image();
+            imageElement.src = imageUrl;
+            
+            // Ajout de l'élément img au conteneur
+            container.appendChild(imageElement);
+            
+            // Affichage du conteneur contenant l'image
+            container.style.display = 'block';
+        })
+        .catch(function(error) {
+            console.log(error);
+        });
+        } else {
+            console.log('Veuillez charger les deux images et saisir une valeur pour le champ "number".');
+        }
+        
+    });
+</script>
+</body>
+</html>
